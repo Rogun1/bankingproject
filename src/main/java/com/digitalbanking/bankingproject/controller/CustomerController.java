@@ -19,14 +19,19 @@ public class CustomerController {
         return customerService.register(CustomerRequestDTO);
     }
 
-    @GetMapping("/user")
+    @GetMapping("/login")
     public CustomerResponseDTO login(Authentication authentication){
         return customerService.login(authentication);
     }
 
-    @PutMapping("/update/{email}")
-    public CustomerResponseDTO update(@PathVariable String email, @RequestBody CustomerRequestDTO customerRequestDTO){
-        return customerService.update(email, customerRequestDTO);
+    @PutMapping("/update")
+    public CustomerResponseDTO update(Authentication authentication, @RequestBody CustomerRequestDTO customerRequestDTO){
+        return customerService.update(authentication.getName(), customerRequestDTO);
+    }
+
+    @GetMapping("/me")
+    public CustomerResponseDTO profile(Authentication authentication){
+        return customerService.profile(authentication.getName());
     }
 
 }

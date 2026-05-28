@@ -22,9 +22,6 @@ public class CustomBasicAuthenticationEntryPoint implements AuthenticationEntryP
         String message = ( authException != null && authException.getMessage() != null) ? authException.getMessage() : "Unauthorized";
         String path = request.getRequestURI();
         response.setHeader("bankApp-error", "Authentication failed");
-        //Default response
-//        response.sendError(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase());
-        //Custom response
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json:charset=UTF-8");
 
