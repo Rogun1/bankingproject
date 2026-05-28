@@ -62,6 +62,6 @@ public class JWTTokenValidatorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         // NU valida token pe endpoint-ul de login (nu există token încă)
-        return request.getServletPath().equals("/customers/user");
+        return request.getServletPath().equals("/customers/login");
     }
 }

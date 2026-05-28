@@ -16,10 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
-import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @Profile("!prod")
@@ -36,11 +33,12 @@ public class BankingSecurityConfig {
                 .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)
                 .addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/customers/update/**").hasRole("USER")
-                        .requestMatchers("/myBalance").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/myLoans").hasRole("ADMIN")
-                        .requestMatchers("/myCards").hasRole("USER")
-                        .requestMatchers("/customers/user").authenticated()
+                        .requestMatchers("/customers/update").hasRole("USER")
+                        .requestMatchers("/customers/me").hasRole("USER")
+                        .requestMatchers("/accounts").hasRole("USER")
+                        .requestMatchers("/accounts/myAccounts").hasRole("USER")
+                        .requestMatchers("/accounts/cards").hasRole("USER")
+                        .requestMatchers("/customers/login").authenticated()
                         .requestMatchers("/contact", "/error", "/customers/register").permitAll()));
         http.httpBasic(hbc -> hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
         http.exceptionHandling(ehc -> ehc.accessDeniedHandler(new CustomAccesDeniedHandler()));

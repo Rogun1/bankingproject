@@ -1,6 +1,6 @@
 package com.digitalbanking.bankingproject.service;
 
-import com.digitalbanking.bankingproject.constants.AccountStatus;
+import com.digitalbanking.bankingproject.constants.CustomerAccountStatus;
 import com.digitalbanking.bankingproject.dto.CustomerRequestDTO;
 import com.digitalbanking.bankingproject.dto.CustomerResponseDTO;
 import com.digitalbanking.bankingproject.model.Authority;
@@ -32,8 +32,15 @@ public class CustomerServiceImp implements CustomerService {
     @Override
     public CustomerResponseDTO register(CustomerRequestDTO customerRequestDTO) {
 
-        customerRepository.findByCNP(customerRequestDTO.CNP())
-                .ifPresent( user -> new RuntimeException("User already exists"));
+        Boolean userExists = customerRepository.existsByCNP(customerRequestDTO.CNP());
+        Boolean emailIsUsed = customerRepository.existsByEmail(customerRequestDTO.email());
+
+        if (userExists){
+            throw new RuntimeException("User already exists");
+        }
+        if (emailIsUsed){
+            throw new RuntimeException("Email already used");
+        }
 
         String hashPwd = passwordEncoder.encode(customerRequestDTO.pwd());
 
@@ -45,7 +52,7 @@ public class CustomerServiceImp implements CustomerService {
                 customerRequestDTO.lastName(),
                 customerRequestDTO.CNP(),
                 null,
-                AccountStatus.ACTIVE,
+                CustomerAccountStatus.ACTIVE,
                 new Date()
         );
 
@@ -70,9 +77,20 @@ public class CustomerServiceImp implements CustomerService {
 
     @Override
     public CustomerResponseDTO update(String email, CustomerRequestDTO customerRequestDTO){
+
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Account doesn't exist for this email"));
         String hashPwd = passwordEncoder.encode(customerRequestDTO.pwd());
+
+        Boolean userExists = customerRepository.existsByCNP(customerRequestDTO.CNP());
+        Boolean emailIsUsed = customerRepository.existsByEmail(customerRequestDTO.email());
+
+        if (userExists){
+            throw new RuntimeException("User already exists");
+        }
+        if (emailIsUsed){
+            throw new RuntimeException("Email already used");
+        }
 
         customer.setFirstName(customerRequestDTO.firstName());
         customer.setLastName(customerRequestDTO.lastName());
@@ -81,5 +99,13 @@ public class CustomerServiceImp implements CustomerService {
         customer.setPwd(hashPwd);
 
         return toDTO(customerRepository.save(customer));
+    }
+
+    @Override
+    public CustomerResponseDTO profile(String email){
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Customer doesn't exists for email : " + email));
+
+        return toDTO(customer);
     }
 }

@@ -12,6 +12,7 @@ public interface CustomerService {
     CustomerResponseDTO register(CustomerRequestDTO customerRequestDTO);
     CustomerResponseDTO login(Authentication authentication);
     CustomerResponseDTO update(String email, CustomerRequestDTO customerRequestDTO);
+    CustomerResponseDTO profile(String email);
 
     default CustomerResponseDTO toDTO(Customer customer){
         List<String> authorities = customer.getAuthorities().stream()

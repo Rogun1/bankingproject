@@ -1,6 +1,6 @@
 package com.digitalbanking.bankingproject.model;
 
-import com.digitalbanking.bankingproject.constants.AccountStatus;
+import com.digitalbanking.bankingproject.constants.CustomerAccountStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,6 +27,6 @@ public class Customer {
     private Long CNP;
     @OneToMany(mappedBy = "customer", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<Authority> authorities;
-    private AccountStatus status = AccountStatus.ONHOLD;
+    private CustomerAccountStatus status = CustomerAccountStatus.ONHOLD;
     private Date createdAt;
 }

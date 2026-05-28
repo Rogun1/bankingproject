@@ -49,6 +49,6 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         // Generează token DOAR la autentificare (login)
-        return !request.getServletPath().equals("/customers/user");
+        return !request.getServletPath().equals("/customers/login");
     }
 }
