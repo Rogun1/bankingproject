@@ -1,6 +1,6 @@
 package com.digitalbanking.bankingproject.dto;
 
-public record CustomerRequestDTO(
+public record PersonRequestDTO(
         String firstName,
         String lastName,
         String email,

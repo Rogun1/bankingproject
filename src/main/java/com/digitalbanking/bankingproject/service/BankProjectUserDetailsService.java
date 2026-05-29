@@ -1,7 +1,7 @@
 package com.digitalbanking.bankingproject.service;
 
-import com.digitalbanking.bankingproject.model.Customer;
-import com.digitalbanking.bankingproject.repository.CustomerRepository;
+import com.digitalbanking.bankingproject.model.Person;
+import com.digitalbanking.bankingproject.repository.PersonRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,17 +17,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BankProjectUserDetailsService implements UserDetailsService {
 
-    private final CustomerRepository customerRepository;
+    private final PersonRepository personRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Customer customer = customerRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User details not found for user: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Person person = personRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User details not found for email: " + email));
 
-        List<GrantedAuthority> authorities = customer.getAuthorities().stream()
+        List<GrantedAuthority> authorities = person.getAuthorities().stream()
                 .map(authority -> (GrantedAuthority) new SimpleGrantedAuthority(authority.getName()))
                 .toList();
 
-        return new User(customer.getEmail(), customer.getPwd(), authorities);
+        return new User(person.getEmail(), person.getPwd(), authorities);
     }
 }

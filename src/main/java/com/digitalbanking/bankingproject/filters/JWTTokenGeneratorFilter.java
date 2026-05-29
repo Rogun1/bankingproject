@@ -15,6 +15,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -36,9 +38,10 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
                         .subject("JWT Token")
                         .claim("username", authentication.getName())
                         .claim("authorities", authentication.getAuthorities().stream()
-                                .map( grantedAuthority -> grantedAuthority.getAuthority()).collect(Collectors.joining(",")))
+                                .map( grantedAuthority -> grantedAuthority.getAuthority())
+                                .collect(Collectors.joining(",")))
                         .issuedAt(new Date())
-                        .expiration(new Date((new Date()).getTime() + 3000000)) // 8h
+                        .expiration(Date.from(Instant.now().plus(Duration.ofMinutes(60))))  // 15 min
                         .signWith(secretKey).compact();
                 response.setHeader(ApplicationConstants.JWT_HEADER, jwt);
             }
@@ -49,6 +52,6 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         // Generează token DOAR la autentificare (login)
-        return !request.getServletPath().equals("/customers/login");
+        return !request.getServletPath().equals("/users/login");
     }
 }

@@ -6,9 +6,9 @@ import com.digitalbanking.bankingproject.dto.AccountRequestDTO;
 import com.digitalbanking.bankingproject.dto.AccountResponseDTO;
 import com.digitalbanking.bankingproject.dto.AccountsResponseDTO;
 import com.digitalbanking.bankingproject.model.Account;
-import com.digitalbanking.bankingproject.model.Customer;
+import com.digitalbanking.bankingproject.model.Person;
 import com.digitalbanking.bankingproject.repository.AccountRepository;
-import com.digitalbanking.bankingproject.repository.CustomerRepository;
+import com.digitalbanking.bankingproject.repository.PersonRepository;
 import com.digitalbanking.bankingproject.service.declarations.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,39 +19,39 @@ import java.util.*;
 public class AccountServiceImp implements AccountService {
 
     private final AccountRepository accountRepository;
-    private final CustomerRepository customerRepository;
+    private final PersonRepository personRepository;
 
     @Autowired
     public AccountServiceImp(AccountRepository accountRepository,
-                             CustomerRepository customerRepository){
+                             PersonRepository personRepository){
 
         this.accountRepository = accountRepository;
-        this.customerRepository = customerRepository;
+        this.personRepository = personRepository;
     }
 
     @Override
     public AccountResponseDTO register(String email, AccountRequestDTO accountRequestDTO) {
 
         String iban = ibanGenerator(accountRequestDTO.currency());
-        Boolean existsByEmail = customerRepository.existsByEmail(email);
-        Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Customer doesn't exist by email: " + email));
+        Boolean existsByEmail = personRepository.existsByEmail(email);
+        Person person = personRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User doesn't exist by email: " + email));
 
-        Boolean existsByCurrAndCustomerId = accountRepository.existsByCurrencyAndCustomerId(accountRequestDTO.currency(), customer.getId());
+        Boolean existsByCurrAndPersonId = accountRepository.existsByCurrencyAndPersonId(accountRequestDTO.currency(), person.getId());
 
         if (!existsByEmail){
-            throw new RuntimeException("Customer doesn't exist by email: " + email);
+            throw new RuntimeException("User doesn't exist by email: " + email);
         }
-        if (existsByCurrAndCustomerId){
+        if (existsByCurrAndPersonId){
             throw new RuntimeException
-                    ("Account for: " + customer.getEmail() + " already exists with currency: " + accountRequestDTO.currency());
+                    ("Account for: " + person.getEmail() + " already exists with currency: " + accountRequestDTO.currency());
         }
 
         Date createdAt = new Date();
 
         Account account = new Account(
                 null,
-                customer,
+                person,
                 accountRequestDTO.currency(),
                 iban,
                 0.0,
@@ -66,9 +66,9 @@ public class AccountServiceImp implements AccountService {
     @Override
     public List<AccountsResponseDTO> accounts(String email){
 
-        Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Customer doesn't exist by id: " + email));
-        List<AccountsResponseDTO> accounts = accountRepository.findAllByCustomerId(customer.getId()).stream()
+        Person person = personRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User doesn't exist by id: " + email));
+        List<AccountsResponseDTO> accounts = accountRepository.findAllByPersonId(person.getId()).stream()
                 .map(account -> new AccountsResponseDTO(
                         account.getCurrency(),
                         account.getIban(),
