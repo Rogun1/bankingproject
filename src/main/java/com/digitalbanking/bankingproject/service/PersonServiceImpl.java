@@ -11,6 +11,7 @@ import com.digitalbanking.bankingproject.repository.AuthorityRepository;
 import com.digitalbanking.bankingproject.repository.PersonRepository;
 import com.digitalbanking.bankingproject.service.declarations.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,14 +21,14 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
-public class PersonServiceImp implements PersonService {
+public class PersonServiceImpl implements PersonService {
 
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthorityRepository authorityRepository;
 
     @Autowired
-    public PersonServiceImp(
+    public PersonServiceImpl(
             PersonRepository personRepository,
             PasswordEncoder passwordEncoder,
             AuthorityRepository authorityRepository){
@@ -117,6 +118,7 @@ public class PersonServiceImp implements PersonService {
         return toDTO(person);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     public PersonResponseDTO assignRole(PersonRoleSetDTO roleDTO, String email){
         Person person = personRepository.findByEmail(email)

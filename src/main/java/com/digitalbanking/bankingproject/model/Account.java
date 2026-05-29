@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Objects;
 
@@ -28,7 +29,7 @@ public class Account {
 
     private String currency;
     private String iban;
-    private Double balance;
+    private BigDecimal balance;
     private AccountType accountType;
     private AccountStatus status = AccountStatus.ONHOLD;
     private Date createdAt;

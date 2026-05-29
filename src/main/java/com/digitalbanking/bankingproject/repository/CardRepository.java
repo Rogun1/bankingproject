@@ -12,4 +12,5 @@ public interface CardRepository extends JpaRepository<Card,Long> {
     Boolean existsByCardNumber(Long cardNumber);
     Boolean existsByCvv(Integer cvv);
     Optional<Card> findById(Long cardId);
+    Optional<Card> findByAccountId(Long accountId);
 }
