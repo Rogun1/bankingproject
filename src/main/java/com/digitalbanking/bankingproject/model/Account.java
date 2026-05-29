@@ -23,8 +23,8 @@ public class Account {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id")
-    private Customer customer;
+    @JoinColumn(name = "person_id")
+    private Person person;
 
     private String currency;
     private String iban;

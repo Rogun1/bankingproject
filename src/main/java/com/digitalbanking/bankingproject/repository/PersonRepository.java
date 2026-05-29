@@ -1,16 +1,16 @@
 package com.digitalbanking.bankingproject.repository;
 
-import com.digitalbanking.bankingproject.model.Customer;
+import com.digitalbanking.bankingproject.model.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface CustomerRepository extends JpaRepository<Customer,Long> {
+public interface PersonRepository extends JpaRepository<Person,Long> {
 
-    Optional<Customer> findByEmail(String email);
+    Optional<Person> findByEmail(String email);
     boolean existsByEmail(String email);
-    Optional<Customer> findByCNP(Long CNP);
+    Optional<Person> findByCNP(Long CNP);
     boolean existsByCNP(Long CNP);
 }

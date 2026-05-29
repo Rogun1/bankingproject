@@ -8,8 +8,8 @@ import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    Boolean existsByCurrencyAndCustomerId(String currency, Long customerId);
+    Boolean existsByCurrencyAndPersonId(String currency, Long personId);
     Optional<Account> findByIban(String iban);
     Boolean existsByIban(String iban);
-    List<Account> findAllByCustomerId(Long customerId);
+    List<Account> findAllByPersonId(Long personId);
 }

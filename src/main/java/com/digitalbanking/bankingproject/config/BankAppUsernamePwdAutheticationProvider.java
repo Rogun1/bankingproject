@@ -31,7 +31,10 @@ public class BankAppUsernamePwdAutheticationProvider implements AuthenticationPr
         if (passwordEncoder.matches(pwd, userDetails.getPassword())){
             //costum authetication logic goes here, like age, etc
 
-            return new UsernamePasswordAuthenticationToken(username,pwd,userDetails.getAuthorities());
+            return new UsernamePasswordAuthenticationToken(
+                    username,
+                    pwd,
+                    userDetails.getAuthorities());
         }else {
             throw new BadCredentialsException("Invalid password");
         }

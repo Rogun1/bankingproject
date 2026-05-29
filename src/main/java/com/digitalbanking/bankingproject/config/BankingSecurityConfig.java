@@ -33,13 +33,15 @@ public class BankingSecurityConfig {
                 .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)
                 .addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/customers/update").hasRole("USER")
-                        .requestMatchers("/customers/me").hasRole("USER")
-                        .requestMatchers("/accounts").hasRole("USER")
-                        .requestMatchers("/accounts/myAccounts").hasRole("USER")
-                        .requestMatchers("/accounts/cards").hasRole("USER")
-                        .requestMatchers("/customers/login").authenticated()
-                        .requestMatchers("/contact", "/error", "/customers/register").permitAll()));
+                        .requestMatchers("/users/update").hasAnyRole("CUSTOMER","EMPLOYER")
+                        .requestMatchers("/users/me").hasAnyRole("CUSTOMER","EMPLOYER")
+                        .requestMatchers("/accounts").hasAnyRole("CUSTOMER","EMPLOYER")
+                        .requestMatchers("/accounts/myAccounts").hasAnyRole("CUSTOMER","EMPLOYER")
+                        .requestMatchers("/accounts/cards").hasAnyRole("CUSTOMER","EMPLOYER")
+                        .requestMatchers("/accounts/cards/**").hasAnyRole("CUSTOMER","EMPLOYER")
+                        .requestMatchers("/users/*/roles").hasAnyRole("MANAGER","ADMIN")
+                        .requestMatchers("/users/login").authenticated()
+                        .requestMatchers("/contact", "/error", "/users/register").permitAll()));
         http.httpBasic(hbc -> hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
         http.exceptionHandling(ehc -> ehc.accessDeniedHandler(new CustomAccesDeniedHandler()));
         return http.build();

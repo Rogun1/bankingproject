@@ -1,5 +1,5 @@
 package com.digitalbanking.bankingproject.constants;
 
-public enum CustomerAccountStatus {
+public enum PersonAccountStatus {
     ONHOLD,ACTIVE,DISABLED,EXPIRED
 }

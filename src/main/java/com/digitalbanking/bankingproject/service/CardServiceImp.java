@@ -1,14 +1,16 @@
 package com.digitalbanking.bankingproject.service;
 
+import com.digitalbanking.bankingproject.config.CardNumberEncrypt;
 import com.digitalbanking.bankingproject.constants.CardStatus;
 import com.digitalbanking.bankingproject.dto.AccountRequestDTO;
 import com.digitalbanking.bankingproject.dto.CardResponseDTO;
+import com.digitalbanking.bankingproject.dto.CardStatusBlockRequestDTO;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Card;
-import com.digitalbanking.bankingproject.model.Customer;
+import com.digitalbanking.bankingproject.model.Person;
 import com.digitalbanking.bankingproject.repository.AccountRepository;
 import com.digitalbanking.bankingproject.repository.CardRepository;
-import com.digitalbanking.bankingproject.repository.CustomerRepository;
+import com.digitalbanking.bankingproject.repository.PersonRepository;
 import com.digitalbanking.bankingproject.service.declarations.CardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,29 +26,30 @@ public class CardServiceImp implements CardService {
 
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
-    private final CustomerRepository customerRepository;
+    private final PersonRepository personRepository;
     private final PasswordEncoder encoder;
 
     @Autowired
     public CardServiceImp(
             CardRepository cardRepository,
             AccountRepository accountRepository,
-            CustomerRepository customerRepository,
-            PasswordEncoder encoder){
+            PersonRepository personRepository,
+            PasswordEncoder encoder,
+            CardNumberEncrypt encryption){
 
         this.cardRepository = cardRepository;
         this.accountRepository = accountRepository;
-        this.customerRepository = customerRepository;
+        this.personRepository = personRepository;
         this.encoder = encoder;
     }
 
     @Override
-    public CardResponseDTO getCard(String email, AccountRequestDTO accountRequestDTO) {
+    public CardResponseDTO getCard(String email, AccountRequestDTO accountRequestDTO) throws Exception {
 
-        Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Customer doesn't exists for email: " + email));
+        Person person = personRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User doesn't exists for email: " + email));
 
-        List<Account> accounts = accountRepository.findAllByCustomerId(customer.getId());
+        List<Account> accounts = accountRepository.findAllByPersonId(person.getId());
         Account account = null;
 
         for (Account acc: accounts){
@@ -67,9 +70,7 @@ public class CardServiceImp implements CardService {
             throw new RuntimeException("No account found for currency: " + accountRequestDTO.currency());
         }
 
-        Long cardNumber = cardNumberGenerator();
-        //hash all but last 4 -- To do
-        //String cardEncoder = encoder.encode(cardNumber);
+        String cardNumber = cardNumberGenerator();
         Integer cvvNumber = cvvGenerator();
 
         Integer year = LocalDate.now().getYear() + 7;
@@ -91,8 +92,27 @@ public class CardServiceImp implements CardService {
         return toDTO(cardRepository.save(card));
     }
 
+    @Override
+    public CardResponseDTO blockCard(String email, Long cardId, CardStatusBlockRequestDTO cardStatus){
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new RuntimeException("Card not found for id: " + cardId));
+        String cardStatusAsString = CardStatus.BLOCKED.toString();
+
+        if (card.getStatus().toString().equals(cardStatusAsString)){
+            throw new RuntimeException("Card is already blocked");
+        }
+        if (cardStatus.cardStatus().equals(cardStatusAsString)){
+            card.setStatus(CardStatus.BLOCKED);
+        }else{
+            throw new RuntimeException("Invalid status to Block Card: " + cardStatus.cardStatus());
+        }
+
+        return toDTO(cardRepository.save(card));
+    }
+
+
     //Simulating a card generator
-    protected Long cardNumberGenerator(){
+    protected String cardNumberGenerator() throws Exception {
         Random random = new Random();
         String cardNumber = "";
         Boolean checkCardNumber = true;
@@ -104,13 +124,13 @@ public class CardServiceImp implements CardService {
                     random.nextInt(1000, 9999);
 
             Long cardToCheck = Long.parseLong(cardNumber);
-            Boolean existsCardNumber = cardRepository.existsByCardNumber(cardToCheck);
+            Boolean existsCardNumber = cardRepository.existsByCardNumber(cardToCheck); // needs work with decrypt TO DO
 
             if (!existsCardNumber){
                 checkCardNumber = false;
             }
         }
-        return Long.parseLong(cardNumber);
+        return cardNumberEncryption(cardNumber);
     }
 
     //Simulating a CVV generator
@@ -129,5 +149,30 @@ public class CardServiceImp implements CardService {
             }
         }
         return cvvNumber;
+    }
+
+    //Card number encoding
+    //Do a proper encoding/decoding TO DO
+    protected String cardNumberEncryption(String cardNumber) throws Exception {
+
+        String cardNumberString = cardNumber.toString();
+        StringBuilder cardNmb = new StringBuilder(cardNumberString);
+
+        String cardNumbersToEncrypt = cardNmb.substring(0,11);
+        String cardNumbersRemained = cardNmb.substring(12,16);
+//        SecretKey symmetricKey = CardNumberEncrypt.generateKey();
+//        IvParameterSpec iv = CardNumberEncrypt.generateIv();
+
+        // Just made to work, not a proper approach
+        // Not actually needed to user encrypt for this app
+//        String cipherText = CardNumberEncrypt.encrypt(
+//                cardNumbersToEncrypt, symmetricKey, iv) + cardNumbersRemained;
+        String beautyNumCode = "";
+
+        for (int i = 0; i < cardNumbersToEncrypt.length() ; i++){
+            beautyNumCode += "*";
+        }
+        beautyNumCode += cardNumbersRemained;
+        return beautyNumCode;
     }
 }

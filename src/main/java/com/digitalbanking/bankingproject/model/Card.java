@@ -24,7 +24,7 @@ public class Card {
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account account;
-    private Long cardNumber;
+    private String cardNumber;
     private Integer cvv;
     private LocalDate expirationDate;
     private CardStatus status = CardStatus.ONHOLD;

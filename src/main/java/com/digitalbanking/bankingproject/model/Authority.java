@@ -18,8 +18,8 @@ public class Authority {
     private Long id;
     private String name;
     @ManyToOne
-    @JoinColumn(name = "customer_id")
-    private Customer customer;
+    @JoinColumn(name = "person_id")
+    private Person person;
 
     @Override
     public String toString() {
