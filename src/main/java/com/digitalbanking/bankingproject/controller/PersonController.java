@@ -41,4 +41,8 @@ public class PersonController {
         return personService.assignRole(role, email);
     }
 
+    @DeleteMapping("/{personId}/delete")
+    public void delete(@PathVariable Long personId){
+        personService.delete(personId);
+    }
 }

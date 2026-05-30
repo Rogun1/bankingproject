@@ -1,9 +1,5 @@
 package com.digitalbanking.bankingproject.config;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;

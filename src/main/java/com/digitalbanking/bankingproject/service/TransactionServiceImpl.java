@@ -3,6 +3,7 @@ package com.digitalbanking.bankingproject.service;
 import com.digitalbanking.bankingproject.constants.AccountStatus;
 import com.digitalbanking.bankingproject.constants.ApplicationConstants;
 import com.digitalbanking.bankingproject.constants.TransactionStatus;
+import com.digitalbanking.bankingproject.dto.TransactionInRangeRequestDTO;
 import com.digitalbanking.bankingproject.dto.TransactionRequestDTO;
 import com.digitalbanking.bankingproject.dto.TransactionResponseDTO;
 import com.digitalbanking.bankingproject.model.Account;
@@ -19,9 +20,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -93,6 +95,12 @@ public class TransactionServiceImpl implements TransactionService {
         BigDecimal amountToTransfer = transactionRequestDTO.amount();
         BigDecimal currentAccountBalance = accountFrom.getBalance();
 
+        // Not done, currency exchange
+//        if (accountTo.getCurrency() != accountFrom.getCurrency()){
+//            double rate = exchange(accountFrom.getCurrency(), accountTo.getCurrency());
+//            amountToTransfer = amountToTransfer.multiply(BigDecimal.valueOf(rate));
+//        }
+
         LocalTime timeNow = LocalTime.now();
         LocalDate dateNow = LocalDate.now();
 
@@ -148,5 +156,44 @@ public class TransactionServiceImpl implements TransactionService {
         accountRepository.save(accountTo);
 
         return toDTO(transactionRepository.save(transaction));
+    }
+
+    @Override
+    public List<TransactionResponseDTO> transactionsInRangeForUser(String email,TransactionInRangeRequestDTO transactionInRangeRequestDTO){
+        Person person = personRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User doesnt' exist for email: " + email));
+        Account account = accountRepository.findByPersonId(person.getId())
+                .orElseThrow(() -> new RuntimeException("No account found for account: " + person.getId()));
+
+        List<TransactionResponseDTO> transactions =
+                transactionRepository.findAllByFromAccountIdAndCreatedAtDateBetween(
+                        account.getId(),
+                        transactionInRangeRequestDTO.dateFrom(),
+                        transactionInRangeRequestDTO.dateTo())
+                .stream()
+                .map(transaction -> toDTO(transaction))
+                .toList();
+
+        return transactions;
+    }
+
+    private double exchange(String from, String to){
+        Map<String, Map<String,Double>> rates = new HashMap<>();
+
+        rates.put("RO", new HashMap<>());
+        rates.get("RO").put("EU", 0.19);
+        rates.get("RO").put("GB", 0.16);
+        rates.get("RO").put("US", 0.22);
+
+        rates.put("EU", new HashMap<>());
+        rates.get("EU").put("GB", 0.87);
+        rates.get("EU").put("US", 1.17);
+
+        rates.put("GB", new HashMap<>());
+        rates.get("GB").put("US", 1.35);
+
+        double getRates = rates.get(from).get(to);
+
+        return getRates;
     }
 }

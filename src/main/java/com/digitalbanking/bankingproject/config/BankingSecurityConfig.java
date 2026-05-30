@@ -38,12 +38,13 @@ public class BankingSecurityConfig {
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/users/update").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/users/me").hasAnyRole("CUSTOMER","EMPLOYER")
+                        .requestMatchers("/users/*/roles").hasAnyRole("MANAGER","ADMIN")
+                        .requestMatchers("/users/*/delete").hasAnyRole("MANAGER","ADMIN")
                         .requestMatchers("/accounts").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/accounts/myAccounts").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/accounts/cards").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/accounts/cards/**").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/accounts/*/delete").hasAnyRole("ADMIN","EMPLOYER")
-                        .requestMatchers("/users/*/roles").hasAnyRole("MANAGER","ADMIN")
                         .requestMatchers("/transactions").hasAnyRole("CUSTOMER")
                         .requestMatchers("/users/login").authenticated()
                         .requestMatchers("/contact", "/error", "/users/register").permitAll()));

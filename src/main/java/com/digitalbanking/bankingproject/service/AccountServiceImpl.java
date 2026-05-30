@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 @Service
@@ -60,7 +62,7 @@ public class AccountServiceImpl implements AccountService {
                 person,
                 accountRequestDTO.currency(),
                 iban,
-                null,
+                new BigDecimal(BigInteger.ZERO),
                 AccountType.CURRENT,
                 AccountStatus.ACTIVE,
                 createdAt
@@ -98,6 +100,9 @@ public class AccountServiceImpl implements AccountService {
             Card card = cardRepository.findByAccountId(account.getId())
                     .orElseThrow(() -> new RuntimeException("Card not found ")); // not actually need to throw something, we know it exists by boolean
             cardRepository.delete(card);
+        }
+        if (account.getBalance().compareTo(BigDecimal.ZERO) > 0){
+            throw new RuntimeException("Account balance must be 0 to be deleted, balance: " + account.getBalance());
         }
 
         accountRepository.delete(account);
