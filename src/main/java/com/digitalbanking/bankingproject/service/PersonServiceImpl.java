@@ -5,35 +5,50 @@ import com.digitalbanking.bankingproject.constants.PersonRole;
 import com.digitalbanking.bankingproject.dto.PersonRequestDTO;
 import com.digitalbanking.bankingproject.dto.PersonResponseDTO;
 import com.digitalbanking.bankingproject.dto.PersonRoleSetDTO;
+import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Authority;
 import com.digitalbanking.bankingproject.model.Person;
+import com.digitalbanking.bankingproject.model.TransactionLimit;
+import com.digitalbanking.bankingproject.repository.AccountRepository;
 import com.digitalbanking.bankingproject.repository.AuthorityRepository;
 import com.digitalbanking.bankingproject.repository.PersonRepository;
+import com.digitalbanking.bankingproject.repository.TransactionLimitRepository;
 import com.digitalbanking.bankingproject.service.declarations.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @Service
-public class PersonServiceImp implements PersonService {
+public class PersonServiceImpl implements PersonService {
 
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthorityRepository authorityRepository;
+    private final TransactionLimitRepository transactionLimitRepository;
+    private final AccountServiceImpl accountServiceImpl;
+    private final AccountRepository accountRepository;
 
     @Autowired
-    public PersonServiceImp(
+    public PersonServiceImpl(
             PersonRepository personRepository,
             PasswordEncoder passwordEncoder,
-            AuthorityRepository authorityRepository){
+            AuthorityRepository authorityRepository,
+            TransactionLimitRepository transactionLimitRepository,
+            AccountServiceImpl accountServiceImpl,
+            AccountRepository accountRepository){
         this.personRepository = personRepository;
         this.passwordEncoder = passwordEncoder;
         this.authorityRepository = authorityRepository;
+        this.transactionLimitRepository = transactionLimitRepository;
+        this.accountServiceImpl = accountServiceImpl;
+        this.accountRepository = accountRepository;
     }
 
 
@@ -66,13 +81,22 @@ public class PersonServiceImp implements PersonService {
 
         Set<Authority> authorities = Set.of(new Authority(
                 null,
-                "ROLE_" + PersonRole.CUSTOMER.toString(),
+                "ROLE_" + PersonRole.CUSTOMER,
                 person
         ));
 
+        TransactionLimit transactionLimit = new TransactionLimit(
+                null,
+                person,
+                12500.0,
+                5000.0,
+                5
+        );
         person.setAuthorities(authorities);
+        personRepository.save(person);
+        transactionLimitRepository.save(transactionLimit);
 
-        return toDTO(personRepository.save(person));
+        return toDTO(person);
     }
 
     //After connection, it gets the JWT token
@@ -117,6 +141,7 @@ public class PersonServiceImp implements PersonService {
         return toDTO(person);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override
     public PersonResponseDTO assignRole(PersonRoleSetDTO roleDTO, String email){
         Person person = personRepository.findByEmail(email)
@@ -150,5 +175,30 @@ public class PersonServiceImp implements PersonService {
         person.getAuthorities().add(authority);
 
         return toDTO(personRepository.save(person));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Override
+    public void delete(Long personId){
+        Person person = personRepository.findById(personId)
+                .orElseThrow(() -> new RuntimeException("User not found for id: " + personId));
+
+        Set<Authority> authorities = authorityRepository.findAllByPersonId(personId);
+
+        TransactionLimit transactionLimit = transactionLimitRepository.findByPersonId(personId)
+                .orElseThrow(() -> new RuntimeException("No  limits for user: " + personId));
+
+        List<Account> accounts = accountRepository.findAllByPersonId(personId);
+
+        for (Account a : accounts){
+            accountServiceImpl.delete(a.getId());
+        }
+
+        for (Authority a : authorities){
+            authorityRepository.delete(a);
+        }
+
+        transactionLimitRepository.delete(transactionLimit);
+        personRepository.delete(person);
     }
 }

@@ -27,10 +27,8 @@ public class AccountController {
         return accountService.accounts(authentication.getName());
     }
 
-//    //Delete for employers only to do
-//    @PreAuthorize("hasRole('ROLE_EMPLOYER')")
-//    @DeleteMapping
-//    public void deleteAccount(){
-//
-//    }
+    @DeleteMapping("/{accountId}/delete")
+    public void deleteAccount(@PathVariable Long accountId){
+        accountService.delete(accountId);
+    }
 }

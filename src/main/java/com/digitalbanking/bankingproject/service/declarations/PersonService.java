@@ -15,6 +15,7 @@ public interface PersonService {
     PersonResponseDTO update(String email, PersonRequestDTO personRequestDTO);
     PersonResponseDTO profile(String email);
     PersonResponseDTO assignRole(PersonRoleSetDTO role, String email);
+    void delete(Long personId);
 
     default PersonResponseDTO toDTO(Person person){
         List<String> authorities = person.getAuthorities().stream()

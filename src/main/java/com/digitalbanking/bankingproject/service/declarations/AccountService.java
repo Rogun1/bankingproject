@@ -10,6 +10,7 @@ import java.util.List;
 public interface AccountService {
     AccountResponseDTO register(String email, AccountRequestDTO accountRequestDTO);
     List<AccountsResponseDTO> accounts(String email);
+    void delete(Long accountId);
 
     default AccountResponseDTO toDTO(Account account){
         return new AccountResponseDTO(

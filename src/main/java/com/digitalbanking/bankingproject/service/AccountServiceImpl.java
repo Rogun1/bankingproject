@@ -6,27 +6,35 @@ import com.digitalbanking.bankingproject.dto.AccountRequestDTO;
 import com.digitalbanking.bankingproject.dto.AccountResponseDTO;
 import com.digitalbanking.bankingproject.dto.AccountsResponseDTO;
 import com.digitalbanking.bankingproject.model.Account;
+import com.digitalbanking.bankingproject.model.Card;
 import com.digitalbanking.bankingproject.model.Person;
 import com.digitalbanking.bankingproject.repository.AccountRepository;
+import com.digitalbanking.bankingproject.repository.CardRepository;
 import com.digitalbanking.bankingproject.repository.PersonRepository;
 import com.digitalbanking.bankingproject.service.declarations.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 @Service
-public class AccountServiceImp implements AccountService {
+public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final PersonRepository personRepository;
+    private final CardRepository cardRepository;
 
     @Autowired
-    public AccountServiceImp(AccountRepository accountRepository,
-                             PersonRepository personRepository){
+    public AccountServiceImpl(AccountRepository accountRepository,
+                              PersonRepository personRepository,
+                              CardRepository cardRepository){
 
         this.accountRepository = accountRepository;
         this.personRepository = personRepository;
+        this.cardRepository = cardRepository;
     }
 
     @Override
@@ -54,7 +62,7 @@ public class AccountServiceImp implements AccountService {
                 person,
                 accountRequestDTO.currency(),
                 iban,
-                0.0,
+                new BigDecimal(BigInteger.ZERO),
                 AccountType.CURRENT,
                 AccountStatus.ACTIVE,
                 createdAt
@@ -80,6 +88,26 @@ public class AccountServiceImp implements AccountService {
 
         return accounts;
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYER')")
+    @Override
+    public void delete(Long accountId){
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found for id: " + accountId));
+        Boolean existsCard = cardRepository.existsCardByAccountId(account.getId());
+
+        if (existsCard){
+            Card card = cardRepository.findByAccountId(account.getId())
+                    .orElseThrow(() -> new RuntimeException("Card not found ")); // not actually need to throw something, we know it exists by boolean
+            cardRepository.delete(card);
+        }
+        if (account.getBalance().compareTo(BigDecimal.ZERO) > 0){
+            throw new RuntimeException("Account balance must be 0 to be deleted, balance: " + account.getBalance());
+        }
+
+        accountRepository.delete(account);
+    }
+
     //Simulating a IBAN generator
     protected String ibanGenerator(String currency){
         String bankPrefix = "BANK";

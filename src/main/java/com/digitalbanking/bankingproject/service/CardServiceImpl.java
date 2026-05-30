@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Random;
 
 @Service
-public class CardServiceImp implements CardService {
+public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
@@ -30,7 +30,7 @@ public class CardServiceImp implements CardService {
     private final PasswordEncoder encoder;
 
     @Autowired
-    public CardServiceImp(
+    public CardServiceImpl(
             CardRepository cardRepository,
             AccountRepository accountRepository,
             PersonRepository personRepository,

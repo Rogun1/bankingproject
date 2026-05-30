@@ -36,10 +36,13 @@ public class PersonController {
         return personService.profile(authentication.getName());
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping("/{email}/roles")
     public PersonResponseDTO assignRole(@RequestBody PersonRoleSetDTO role, @PathVariable String email){
         return personService.assignRole(role, email);
     }
 
+    @DeleteMapping("/{personId}/delete")
+    public void delete(@PathVariable Long personId){
+        personService.delete(personId);
+    }
 }

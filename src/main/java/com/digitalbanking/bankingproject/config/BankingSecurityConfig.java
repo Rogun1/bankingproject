@@ -2,14 +2,15 @@ package com.digitalbanking.bankingproject.config;
 
 import com.digitalbanking.bankingproject.exceptions.CustomAccesDeniedHandler;
 import com.digitalbanking.bankingproject.exceptions.CustomBasicAuthenticationEntryPoint;
-import com.digitalbanking.bankingproject.filters.CsrfCookieFilter;
 import com.digitalbanking.bankingproject.filters.JWTTokenGeneratorFilter;
 import com.digitalbanking.bankingproject.filters.JWTTokenValidatorFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.password.CompromisedPasswordChecker;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,8 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 @Configuration
 @Profile("!prod")
+@EnableWebSecurity
+@EnableMethodSecurity
 public class BankingSecurityConfig {
 
     @Bean
@@ -35,11 +38,14 @@ public class BankingSecurityConfig {
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/users/update").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/users/me").hasAnyRole("CUSTOMER","EMPLOYER")
+                        .requestMatchers("/users/*/roles").hasAnyRole("MANAGER","ADMIN")
+                        .requestMatchers("/users/*/delete").hasAnyRole("MANAGER","ADMIN")
                         .requestMatchers("/accounts").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/accounts/myAccounts").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/accounts/cards").hasAnyRole("CUSTOMER","EMPLOYER")
                         .requestMatchers("/accounts/cards/**").hasAnyRole("CUSTOMER","EMPLOYER")
-                        .requestMatchers("/users/*/roles").hasAnyRole("MANAGER","ADMIN")
+                        .requestMatchers("/accounts/*/delete").hasAnyRole("ADMIN","EMPLOYER")
+                        .requestMatchers("/transactions").hasAnyRole("CUSTOMER")
                         .requestMatchers("/users/login").authenticated()
                         .requestMatchers("/contact", "/error", "/users/register").permitAll()));
         http.httpBasic(hbc -> hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
