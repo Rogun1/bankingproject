@@ -17,11 +17,11 @@ public class TransactionLimit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "person_id")
     private Person person;
     private Double dailyLimit;
     private Double perTransactionLimit;
-    private Integer maxTransactionLimitDaily;
+    private Integer maxTransactionsLimitDaily;
 
 }

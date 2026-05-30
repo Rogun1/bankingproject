@@ -8,15 +8,20 @@ import com.digitalbanking.bankingproject.dto.TransactionResponseDTO;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Person;
 import com.digitalbanking.bankingproject.model.Transaction;
+import com.digitalbanking.bankingproject.model.TransactionLimit;
 import com.digitalbanking.bankingproject.repository.AccountRepository;
 import com.digitalbanking.bankingproject.repository.PersonRepository;
+import com.digitalbanking.bankingproject.repository.TransactionLimitRepository;
 import com.digitalbanking.bankingproject.repository.TransactionRepository;
 import com.digitalbanking.bankingproject.service.declarations.TransactionService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -24,14 +29,17 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final PersonRepository personRepository;
+    private final TransactionLimitRepository transactionLimitRepository;
 
     public TransactionServiceImpl(
             TransactionRepository transactionRepository,
             AccountRepository accountRepository,
-            PersonRepository personRepository){
+            PersonRepository personRepository,
+            TransactionLimitRepository transactionLimitRepository){
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
         this.personRepository = personRepository;
+        this.transactionLimitRepository = transactionLimitRepository;
     }
 
     @Transactional
@@ -40,8 +48,9 @@ public class TransactionServiceImpl implements TransactionService {
 
         // ----------------------
         // Prevents deadlock
-        // When fromAcc is locked to do make a transfer to toAcc
-        // If toAcc wants to make a transfer to fromAcc, fromAcc will be locked
+        // When a transaction from fromAcc is locked to do make a transfer to toAcc
+        // If another transaction to toAcc wants to make a transfer to fromAcc, fromAcc will be locked
+        // Here we force the transaction to have the same order based on accId
         Long fromId = transactionRequestDTO.fromAccountId();
         Long toId = transactionRequestDTO.toAccountId();
 
@@ -59,11 +68,11 @@ public class TransactionServiceImpl implements TransactionService {
                 () -> new RuntimeException("Second account not found for id: " +  secondId)
         );
 
-        //Is the first account the one that transfers ?
         Account accountFrom = (first.getId().equals(fromId)) ? first : second;
         Account accountTo = (first.getId().equals(toId)) ? first : second;
 
         // ----------------------
+
         Person person = personRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User doesnt' exist for email: " + email));
 
@@ -84,6 +93,33 @@ public class TransactionServiceImpl implements TransactionService {
         BigDecimal amountToTransfer = transactionRequestDTO.amount();
         BigDecimal currentAccountBalance = accountFrom.getBalance();
 
+        LocalTime timeNow = LocalTime.now();
+        LocalDate dateNow = LocalDate.now();
+
+        List<Transaction> transactionsToday = transactionRepository.findAllByFromAccountIdAndCreatedAtDate(accountFrom.getId(),dateNow);
+
+        TransactionLimit transactionLimit = transactionLimitRepository.findByPersonId(person.getId())
+                .orElseThrow(() -> new RuntimeException("User not found for id: " + person.getId()));
+
+        BigDecimal totalAmountTransactionsToday = BigDecimal.ZERO;
+
+        if (!transactionsToday.isEmpty()){
+            for (Transaction t : transactionsToday){
+                totalAmountTransactionsToday = totalAmountTransactionsToday.add(t.getAmount());
+            }
+            if (totalAmountTransactionsToday.compareTo(BigDecimal.valueOf(transactionLimit.getDailyLimit())) > 0){
+                throw new RuntimeException("Daily limit amount of " + transactionLimit.getDailyLimit() + " for transactions reached: " + totalAmountTransactionsToday);
+            }
+        }
+
+        if (transactionLimit.getPerTransactionLimit() < amountToTransfer.doubleValue() ){
+            throw new RuntimeException("Per transaction limit is set to maximum: " + transactionLimit.getPerTransactionLimit());
+        }
+
+        if (!(transactionsToday.size() < transactionLimit.getMaxTransactionsLimitDaily())){
+            throw new RuntimeException("Max transaction limit today reached");
+        }
+
         if (currentAccountBalance.compareTo(amountToTransfer.add(bankTransferFee)) < 0){
             throw new RuntimeException("Insufficient funds");
         }
@@ -101,9 +137,11 @@ public class TransactionServiceImpl implements TransactionService {
                 accountTo.getId(),
                 amountToTransfer,
                 accountFrom.getCurrency(),
-                TransactionStatus.ONHOLD,
+                TransactionStatus.COMPLETED,
                 transactionRequestDTO.description(),
-                new Date()
+                dateNow,
+                timeNow
+
         );
 
         accountRepository.save(accountFrom);

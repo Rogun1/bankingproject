@@ -7,8 +7,10 @@ import com.digitalbanking.bankingproject.dto.PersonResponseDTO;
 import com.digitalbanking.bankingproject.dto.PersonRoleSetDTO;
 import com.digitalbanking.bankingproject.model.Authority;
 import com.digitalbanking.bankingproject.model.Person;
+import com.digitalbanking.bankingproject.model.TransactionLimit;
 import com.digitalbanking.bankingproject.repository.AuthorityRepository;
 import com.digitalbanking.bankingproject.repository.PersonRepository;
+import com.digitalbanking.bankingproject.repository.TransactionLimitRepository;
 import com.digitalbanking.bankingproject.service.declarations.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,15 +28,18 @@ public class PersonServiceImpl implements PersonService {
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthorityRepository authorityRepository;
+    private final TransactionLimitRepository transactionLimitRepository;
 
     @Autowired
     public PersonServiceImpl(
             PersonRepository personRepository,
             PasswordEncoder passwordEncoder,
-            AuthorityRepository authorityRepository){
+            AuthorityRepository authorityRepository,
+            TransactionLimitRepository transactionLimitRepository){
         this.personRepository = personRepository;
         this.passwordEncoder = passwordEncoder;
         this.authorityRepository = authorityRepository;
+        this.transactionLimitRepository = transactionLimitRepository;
     }
 
 
@@ -67,13 +72,22 @@ public class PersonServiceImpl implements PersonService {
 
         Set<Authority> authorities = Set.of(new Authority(
                 null,
-                "ROLE_" + PersonRole.CUSTOMER.toString(),
+                "ROLE_" + PersonRole.CUSTOMER,
                 person
         ));
 
+        TransactionLimit transactionLimit = new TransactionLimit(
+                null,
+                person,
+                12500.0,
+                5000.0,
+                5
+        );
         person.setAuthorities(authorities);
+        personRepository.save(person);
+        transactionLimitRepository.save(transactionLimit);
 
-        return toDTO(personRepository.save(person));
+        return toDTO(person);
     }
 
     //After connection, it gets the JWT token

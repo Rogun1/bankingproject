@@ -15,7 +15,8 @@ public interface TransactionService {
                 transaction.getAmount(),
                 transaction.getStatus(),
                 transaction.getDescription(),
-                transaction.getCreatedAt()
+                transaction.getCreatedAtDate(),
+                transaction.getCreatedAtTime()
         );
     }
 }

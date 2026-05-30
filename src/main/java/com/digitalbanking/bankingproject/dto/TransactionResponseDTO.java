@@ -4,7 +4,8 @@ package com.digitalbanking.bankingproject.dto;
 import com.digitalbanking.bankingproject.constants.TransactionStatus;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 public record TransactionResponseDTO(
         Long fromAccountId,
@@ -12,6 +13,7 @@ public record TransactionResponseDTO(
         BigDecimal amount,
         TransactionStatus status,
         String description,
-        Date date
+        LocalDate date,
+        LocalTime time
 ) {
 }

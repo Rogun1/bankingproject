@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "transactions")
@@ -26,5 +28,6 @@ public class Transaction {
     private String currency;
     private TransactionStatus status;
     private String description;
-    private Date createdAt;
+    private LocalDate createdAtDate;
+    private LocalTime createdAtTime;
 }
