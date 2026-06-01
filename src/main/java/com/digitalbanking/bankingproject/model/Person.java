@@ -27,6 +27,7 @@ public class Person {
     private Long CNP;
     @OneToMany(mappedBy = "person", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Set<Authority> authorities;
+    @Enumerated(EnumType.STRING)
     private PersonAccountStatus status = PersonAccountStatus.ONHOLD;
     private Date createdAt;
 }

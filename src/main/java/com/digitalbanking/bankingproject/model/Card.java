@@ -27,6 +27,7 @@ public class Card {
     private String cardNumber;
     private Integer cvv;
     private LocalDate expirationDate;
+    @Enumerated(EnumType.STRING)
     private CardStatus status = CardStatus.ONHOLD;
     private Integer dailyLimit;
     private Date createdAt;

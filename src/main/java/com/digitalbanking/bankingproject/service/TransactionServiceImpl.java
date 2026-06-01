@@ -6,6 +6,10 @@ import com.digitalbanking.bankingproject.constants.TransactionStatus;
 import com.digitalbanking.bankingproject.dto.TransactionInRangeRequestDTO;
 import com.digitalbanking.bankingproject.dto.TransactionRequestDTO;
 import com.digitalbanking.bankingproject.dto.TransactionResponseDTO;
+import com.digitalbanking.bankingproject.exceptions.AccountDisabledOrExpiredException;
+import com.digitalbanking.bankingproject.exceptions.InsufficientFundsException;
+import com.digitalbanking.bankingproject.exceptions.InvalidAccountUsage;
+import com.digitalbanking.bankingproject.exceptions.SameAccountTransferException;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Person;
 import com.digitalbanking.bankingproject.model.Transaction;
@@ -57,7 +61,7 @@ public class TransactionServiceImpl implements TransactionService {
         Long toId = transactionRequestDTO.toAccountId();
 
         if (fromId.equals(toId)){
-            throw new RuntimeException("Cannot transfer to the same account");
+            throw new SameAccountTransferException("Cannot transfer to the same account");
         }
 
         Long firstId = fromId < toId ? fromId : toId;
@@ -76,19 +80,19 @@ public class TransactionServiceImpl implements TransactionService {
         // ----------------------
 
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User doesnt' exist for email: " + email));
+                .orElseThrow(() -> new RuntimeException("User doesn't exist for email: " + email));
 
         if (!accountFrom.getPerson().getId().equals(person.getId())){
-            throw new RuntimeException("Invalid account " + fromId + ", choose your accounts");
+            throw new InvalidAccountUsage("Invalid account " + fromId + ", choose your accounts");
         }
 
         if (accountFrom.getStatus() == AccountStatus.DISABLED
         || accountFrom.getStatus() == AccountStatus.EXPIRED){
-            throw new RuntimeException("Account is: " + accountFrom.getStatus());
+            throw new AccountDisabledOrExpiredException("Account is: " + accountFrom.getStatus());
         }
         if (accountTo.getStatus() == AccountStatus.DISABLED
                 || accountTo.getStatus() == AccountStatus.EXPIRED){
-            throw new RuntimeException("Account to transfer is: " + accountTo.getStatus());
+            throw new AccountDisabledOrExpiredException("Account to transfer is: " + accountTo.getStatus());
         }
 
         BigDecimal bankTransferFee = ApplicationConstants.BANK_TRANSFER_FEE;
@@ -129,7 +133,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         if (currentAccountBalance.compareTo(amountToTransfer.add(bankTransferFee)) < 0){
-            throw new RuntimeException("Insufficient funds");
+            throw new InsufficientFundsException("Insufficient funds");
         }
 
         accountFrom.setBalance(currentAccountBalance

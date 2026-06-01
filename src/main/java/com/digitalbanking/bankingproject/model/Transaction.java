@@ -25,6 +25,7 @@ public class Transaction {
     private Long toAccountId;
     private BigDecimal amount;
     private String currency;
+    @Enumerated(EnumType.STRING)
     private TransactionStatus status;
     private String description;
     private LocalDate createdAtDate;
