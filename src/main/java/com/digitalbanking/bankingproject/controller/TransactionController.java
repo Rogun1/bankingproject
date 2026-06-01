@@ -6,6 +6,7 @@ import com.digitalbanking.bankingproject.dto.TransactionResponseDTO;
 import com.digitalbanking.bankingproject.service.declarations.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,8 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping
-    public TransactionResponseDTO transfer(Authentication authentication, @RequestBody TransactionRequestDTO transactionRequestDTO){
+    public TransactionResponseDTO transfer(Authentication authentication,
+                                           @RequestBody @Valid TransactionRequestDTO transactionRequestDTO){
         return transactionService.transfer(authentication.getName(),transactionRequestDTO);
     }
 

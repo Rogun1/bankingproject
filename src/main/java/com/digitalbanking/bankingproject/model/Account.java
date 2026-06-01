@@ -30,7 +30,9 @@ public class Account {
     private String currency;
     private String iban;
     private BigDecimal balance;
+    @Enumerated(EnumType.STRING)
     private AccountType accountType;
+    @Enumerated(EnumType.STRING)
     private AccountStatus status = AccountStatus.ONHOLD;
     private Date createdAt;
 

@@ -1,11 +1,14 @@
 package com.digitalbanking.bankingproject.dto;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.math.BigDecimal;
 
 public record TransactionRequestDTO(
-        Long fromAccountId,
-        Long toAccountId,
-        BigDecimal amount,
+        @NotNull Long fromAccountId,
+        @NotNull Long toAccountId,
+        @NotNull @Positive BigDecimal amount,
         String description
 ) {
 }
