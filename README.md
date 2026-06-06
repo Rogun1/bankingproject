@@ -11,7 +11,7 @@ role-based authorization, and transaction limit enforcement.
 - PostgreSQL + Spring Data JPA / Hibernate
 - Docker - PostgreSQL instance
 - JUnit 5 + Mockito + Testcontainers
-- Swagger / OpenAPI
+- Postman
 
 ## Features
 
