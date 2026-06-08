@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class InvalidAccountUsage extends RuntimeException {
-    public InvalidAccountUsage(String message) {
+public class InvalidAccountUsageException extends RuntimeException {
+    public InvalidAccountUsageException(String message) {
         super(message);
     }
 }

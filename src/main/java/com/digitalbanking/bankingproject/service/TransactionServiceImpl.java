@@ -8,7 +8,7 @@ import com.digitalbanking.bankingproject.dto.TransactionRequestDTO;
 import com.digitalbanking.bankingproject.dto.TransactionResponseDTO;
 import com.digitalbanking.bankingproject.exceptions.AccountDisabledOrExpiredException;
 import com.digitalbanking.bankingproject.exceptions.InsufficientFundsException;
-import com.digitalbanking.bankingproject.exceptions.InvalidAccountUsage;
+import com.digitalbanking.bankingproject.exceptions.InvalidAccountUsageException;
 import com.digitalbanking.bankingproject.exceptions.SameAccountTransferException;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Person;
@@ -83,7 +83,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new RuntimeException("User doesn't exist for email: " + email));
 
         if (!accountFrom.getPerson().getId().equals(person.getId())){
-            throw new InvalidAccountUsage("Invalid account " + fromId + ", choose your accounts");
+            throw new InvalidAccountUsageException("Invalid account " + fromId + ", choose your accounts");
         }
 
         if (accountFrom.getStatus() == AccountStatus.DISABLED

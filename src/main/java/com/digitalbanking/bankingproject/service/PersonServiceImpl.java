@@ -5,6 +5,10 @@ import com.digitalbanking.bankingproject.constants.PersonRole;
 import com.digitalbanking.bankingproject.dto.PersonRequestDTO;
 import com.digitalbanking.bankingproject.dto.PersonResponseDTO;
 import com.digitalbanking.bankingproject.dto.PersonRoleSetDTO;
+import com.digitalbanking.bankingproject.exceptions.InvalidAccountUsageException;
+import com.digitalbanking.bankingproject.exceptions.NotFoundException;
+import com.digitalbanking.bankingproject.exceptions.PersonAlreadyExistsException;
+import com.digitalbanking.bankingproject.exceptions.PersonAlreadyHasRoleException;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Authority;
 import com.digitalbanking.bankingproject.model.Person;
@@ -115,13 +119,17 @@ public class PersonServiceImpl implements PersonService {
         String hashPwd = passwordEncoder.encode(personRequestDTO.pwd());
 
         Boolean userExists = personRepository.existsByCNP(personRequestDTO.CNP());
-        Boolean emailIsUsed = personRepository.existsByEmail(personRequestDTO.email());
+        Boolean emailExists = personRepository.existsByEmail(personRequestDTO.email());
+
+        if (emailExists.equals(email)){
+            emailExists = false;
+        }
 
         if (userExists){
-            throw new RuntimeException("User already exists");
+            throw new PersonAlreadyExistsException("User already exists");
         }
-        if (emailIsUsed){
-            throw new RuntimeException("Email already used"); // conflict , fix this
+        if (emailExists){
+            throw new PersonAlreadyExistsException("Email already used");
         }
 
         person.setFirstName(personRequestDTO.firstName());
@@ -136,7 +144,7 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public PersonResponseDTO profile(String email){
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User doesn't exists for email : " + email));
+                .orElseThrow(() -> new InvalidAccountUsageException("User doesn't exists for email : " + email));
 
         return toDTO(person);
     }
@@ -145,7 +153,7 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public PersonResponseDTO assignRole(PersonRoleSetDTO roleDTO, String email){
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User doesn't exist for email : " + email));
+                .orElseThrow(() -> new InvalidAccountUsageException("Person doesn't exist for email : " + email));
         Set<Authority> authorities = authorityRepository.findAllByPersonId(person.getId());
 
         PersonRole role;
@@ -163,7 +171,7 @@ public class PersonServiceImpl implements PersonService {
                 .anyMatch(authority -> authority.getName().equals(roleName));
 
         if (existsRole){
-            throw new RuntimeException("User already has role: " + roleName);
+            throw new PersonAlreadyHasRoleException("User already has role: " + roleName);
         }
 
         Authority authority = new Authority(
@@ -181,12 +189,12 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public void delete(Long personId){
         Person person = personRepository.findById(personId)
-                .orElseThrow(() -> new RuntimeException("User not found for id: " + personId));
+                .orElseThrow(() -> new NotFoundException("User not found for id: " + personId));
 
         Set<Authority> authorities = authorityRepository.findAllByPersonId(personId);
 
         TransactionLimit transactionLimit = transactionLimitRepository.findByPersonId(personId)
-                .orElseThrow(() -> new RuntimeException("No  limits for user: " + personId));
+                .orElseThrow(() -> new NotFoundException("No  limits for user: " + personId));
 
         List<Account> accounts = accountRepository.findAllByPersonId(personId);
 

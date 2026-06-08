@@ -12,7 +12,6 @@ import com.digitalbanking.bankingproject.repository.TransactionLimitRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -29,8 +28,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -87,10 +85,12 @@ public class PersonControllerIT {
                 new Date()
         );
 
-        authorities = Set.of(new Authority(
-                null,
-                "ROLE_" + PersonRole.CUSTOMER,
-                person
+        authorities = new HashSet<>(Set.of(
+                new Authority(
+                        null,
+                        "ROLE_" + PersonRole.CUSTOMER,
+                        person
+                )
         ));
 
         person.setAuthorities(authorities);
@@ -185,5 +185,292 @@ public class PersonControllerIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().is4xxClientError());
+    }
+
+    // --------------------------------------------
+    // PUT /update — SUCCESS
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul@gmail.com", roles = {"CUSTOMER"})
+    void update_ShouldReturn200_WhenUpdateSuccessful() throws Exception{
+        personRepository.save(person);
+
+        String body = """
+                {
+                    "firstName": "RaulUpdated",
+                    "lastName": "MrnUpdated",
+                    "email": "raul2@gmail.com",
+                    "CNP": 12345,
+                    "pwd": "%s"
+                }
+                """.formatted(personRequestDTO.pwd());
+
+        mockMvc.perform(put("/users/update")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isOk());
+    }
+
+    // --------------------------------------------
+    // PUT /update — FAILED
+    // --------------------------------------------
+
+    @Test
+    //@WithMockUser(username = "raul@gmail.com", roles = {"CUSTOMER"})
+    void update_ShouldReturn401_WhenNotAuthenticated() throws Exception{
+        personRepository.save(person);
+
+        String body = """
+                {
+                    "firstName": "RaulUpdated",
+                    "lastName": "MrnUpdated",
+                    "email": "raul2@gmail.com",
+                    "CNP": 12345,
+                    "pwd": "%s"
+                }
+                """.formatted(personRequestDTO.pwd());
+
+        mockMvc.perform(put("/users/update")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // --------------------------------------------
+    // PUT /update — FAILED
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul@gmail.com", roles = {"CUSTOMER"})
+    void update_ShouldReturn409_WhenExistsByCNP() throws Exception{
+        personRepository.save(person);
+
+        String body = """
+                {
+                    "firstName": "RaulUpdated",
+                    "lastName": "MrnUpdated",
+                    "email": "raul2@gmail.com",
+                    "CNP": 123456789,
+                    "pwd": "%s"
+                }
+                """.formatted(personRequestDTO.pwd());
+
+        mockMvc.perform(put("/users/update")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isConflict());
+    }
+
+    // --------------------------------------------
+    // PUT /update — FAILED
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul@gmail.com", roles = {"CUSTOMER"})
+    void update_ShouldReturn409_WhenExistsByEmail() throws Exception{
+        personRepository.save(person);
+
+        String body = """
+                {
+                    "firstName": "RaulUpdated",
+                    "lastName": "MrnUpdated",
+                    "email": "raul@gmail.com",
+                    "CNP": 12345678,
+                    "pwd": "%s"
+                }
+                """.formatted(personRequestDTO.pwd());
+
+        mockMvc.perform(put("/users/update")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isConflict());
+    }
+
+    // --------------------------------------------
+    // GET /me — SUCCESS
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul@gmail.com", roles = {"CUSTOMER"})
+    void me_ShouldReturn200_WhenUserExists() throws Exception{
+        personRepository.save(person);
+
+        mockMvc.perform(get("/users/me")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    // --------------------------------------------
+    // GET /me — FAILED
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul1@gmail.com", roles = {"CUSTOMER"})
+    void me_ShouldReturn401_WhenNotAuthenticated() throws Exception{
+        personRepository.save(person);
+
+        mockMvc.perform(get("/users/me")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // --------------------------------------------
+    // PATCH /{email}/roles — SUCCESS
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul2@gmail.com", roles = {"MANAGER"})
+    void assignRole_ShouldReturn200_WhenAssignRole() throws Exception{
+        personRepository.save(person);
+
+        String body = """
+                {
+                    "role": "EMPLOYER"
+                }
+                """;
+
+        mockMvc.perform(patch("/users/{email}/roles", "raul@gmail.com")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isOk());
+    }
+
+    // --------------------------------------------
+    // PATCH /{email}/roles — FAILED
+    // --------------------------------------------
+
+    @Test
+    //@WithMockUser(username = "raul2@gmail.com", roles = {"MANAGER"})
+    void assignRole_ShouldReturn401_WhenNotAuthenticated() throws Exception{
+        personRepository.save(person);
+
+        String body = """
+                {
+                    "role": "EMPLOYER"
+                }
+                """;
+
+        mockMvc.perform(patch("/users/{email}/roles", "raul@gmail.com")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // --------------------------------------------
+    // PATCH /{email}/roles — FAILED
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul2@gmail.com", roles = {"CUSTOMER"})
+    void assignRole_ShouldReturn403_WhenForbidden() throws Exception{
+        personRepository.save(person);
+
+        String body = """
+                {
+                    "role": "EMPLOYER"
+                }
+                """;
+
+        mockMvc.perform(patch("/users/{email}/roles", "raul@gmail.com")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isForbidden());
+    }
+
+    // --------------------------------------------
+    // PATCH /{email}/roles — FAILED
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul2@gmail.com", roles = {"ADMIN"})
+    void assignRole_ShouldReturn409_WhenAlreadyHasRole() throws Exception{
+        personRepository.save(person);
+
+        String body = """
+                {
+                    "role": "CUSTOMER"
+                }
+                """;
+
+        mockMvc.perform(patch("/users/{email}/roles", "raul@gmail.com")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isConflict());
+    }
+
+    // --------------------------------------------
+    // DELETE /{personId}/delete — SUCCESS
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul2@gmail.com", roles = {"ADMIN"})
+    void delete_ShouldReturn200_WhenDeleteSuccess() throws Exception{
+        personRepository.save(person);
+        transactionLimitRepository.save(transactionLimit);
+
+        mockMvc.perform(delete("/users/{personId}/delete", person.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    // --------------------------------------------
+    // DELETE /{personId}/delete — FAILED
+    // --------------------------------------------
+
+    @Test
+    //@WithMockUser(username = "raul2@gmail.com", roles = {"ADMIN"})
+    void delete_ShouldReturn401_WhenNotAuthenticated() throws Exception{
+        personRepository.save(person);
+        transactionLimitRepository.save(transactionLimit);
+
+        mockMvc.perform(delete("/users/{personId}/delete", person.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // --------------------------------------------
+    // DELETE /{personId}/delete — FAILED
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul2@gmail.com", roles = {"CUSTOMER"})
+    void delete_ShouldReturn403_WhenForbidden() throws Exception{
+        personRepository.save(person);
+        transactionLimitRepository.save(transactionLimit);
+
+        mockMvc.perform(delete("/users/{personId}/delete", person.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    // --------------------------------------------
+    // DELETE /{personId}/delete — FAILED
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul2@gmail.com", roles = {"ADMIN"})
+    void delete_ShouldReturn409_WhenPersonNotFoundById() throws Exception{
+        personRepository.save(person);
+        transactionLimitRepository.save(transactionLimit);
+
+        mockMvc.perform(delete("/users/{personId}/delete", 2L)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict());
+    }
+
+    // --------------------------------------------
+    // DELETE /{personId}/delete — FAILED
+    // --------------------------------------------
+
+    @Test
+    @WithMockUser(username = "raul2@gmail.com", roles = {"ADMIN"})
+    void delete_ShouldReturn409_WhenTransactionLimitNotFound() throws Exception{
+        personRepository.save(person);
+        //transactionLimitRepository.save(transactionLimit);
+
+        mockMvc.perform(delete("/users/{personId}/delete", person.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict());
     }
 }
