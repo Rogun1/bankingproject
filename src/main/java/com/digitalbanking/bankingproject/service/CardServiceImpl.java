@@ -58,7 +58,7 @@ public class CardServiceImpl implements CardService {
             System.out.println("[" + accountRequestDTO.currency() + "]");
 
             if (acc.getCurrency().equals(accountRequestDTO.currency()) ) {
-                Boolean existsCard = cardRepository.existsCardByAccountId(acc.getId());
+                boolean existsCard = cardRepository.existsCardByAccountId(acc.getId());
                 if (existsCard) {
                     throw new RuntimeException("You already have an card opened for: " + acc.getCurrency());
                 }
@@ -71,13 +71,13 @@ public class CardServiceImpl implements CardService {
         }
 
         String cardNumber = cardNumberGenerator();
-        Integer cvvNumber = cvvGenerator();
+        int cvvNumber = cvvGenerator();
 
-        Integer year = LocalDate.now().getYear() + 7;
-        Integer month = LocalDate.now().getMonthValue();
-        Integer day = LocalDate.now().getDayOfMonth();
+        int year = LocalDate.now().getYear() + 7;
+        int month = LocalDate.now().getMonthValue();
+        int day = LocalDate.now().getDayOfMonth();
         LocalDate expDate = LocalDate.of(year,month,day);
-        Integer dailyLimit = 5000;
+        int dailyLimit = 5000;
 
         Card card = new Card(
                 null,
@@ -115,7 +115,7 @@ public class CardServiceImpl implements CardService {
     protected String cardNumberGenerator() throws Exception {
         Random random = new Random();
         String cardNumber = "";
-        Boolean checkCardNumber = true;
+        boolean checkCardNumber = true;
 
         while (checkCardNumber){
             cardNumber = ""+ random.nextInt(1000, 9999)+
@@ -124,7 +124,7 @@ public class CardServiceImpl implements CardService {
                     random.nextInt(1000, 9999);
 
             Long cardToCheck = Long.parseLong(cardNumber);
-            Boolean existsCardNumber = cardRepository.existsByCardNumber(cardToCheck); // needs work with decrypt TO DO
+            boolean existsCardNumber = cardRepository.existsByCardNumber(cardToCheck); // needs work with decrypt TO DO
 
             if (!existsCardNumber){
                 checkCardNumber = false;
@@ -136,13 +136,13 @@ public class CardServiceImpl implements CardService {
     //Simulating a CVV generator
     protected Integer cvvGenerator(){
         Random random = new Random();
-        Integer cvvNumber = 0;
-        Boolean checkCVVNumber = true;
+        int cvvNumber = 0;
+        boolean checkCVVNumber = true;
 
         while (checkCVVNumber){
             cvvNumber = random.nextInt(100, 999);
 
-            Boolean existsCardNumber = cardRepository.existsByCvv(cvvNumber);
+            boolean existsCardNumber = cardRepository.existsByCvv(cvvNumber);
 
             if (!existsCardNumber){
                 checkCVVNumber = false;

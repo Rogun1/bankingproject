@@ -115,7 +115,7 @@ public class PersonServiceImpl implements PersonService {
     public PersonResponseDTO update(String email, PersonRequestDTO personRequestDTO){
 
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Account doesn't exist for this email"));
+                .orElseThrow(() -> new NotFoundException("Account doesn't exist for this email"));
         String hashPwd = passwordEncoder.encode(personRequestDTO.pwd());
 
         Boolean userExists = personRepository.existsByCNP(personRequestDTO.CNP());

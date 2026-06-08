@@ -5,6 +5,9 @@ import com.digitalbanking.bankingproject.constants.AccountType;
 import com.digitalbanking.bankingproject.dto.AccountRequestDTO;
 import com.digitalbanking.bankingproject.dto.AccountResponseDTO;
 import com.digitalbanking.bankingproject.dto.AccountsResponseDTO;
+import com.digitalbanking.bankingproject.exceptions.AlreadyExistsException;
+import com.digitalbanking.bankingproject.exceptions.BalanceZeroException;
+import com.digitalbanking.bankingproject.exceptions.NotFoundException;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Card;
 import com.digitalbanking.bankingproject.model.Person;
@@ -41,17 +44,17 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponseDTO register(String email, AccountRequestDTO accountRequestDTO) {
 
         String iban = ibanGenerator(accountRequestDTO.currency());
-        Boolean existsByEmail = personRepository.existsByEmail(email);
+        boolean existsByEmail = personRepository.existsByEmail(email);
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User doesn't exist by email: " + email));
+                .orElseThrow(() -> new NotFoundException("User doesn't exist by email: " + email));
 
-        Boolean existsByCurrAndPersonId = accountRepository.existsByCurrencyAndPersonId(accountRequestDTO.currency(), person.getId());
+        boolean existsByCurrAndPersonId = accountRepository.existsByCurrencyAndPersonId(accountRequestDTO.currency(), person.getId());
 
         if (!existsByEmail){
-            throw new RuntimeException("User doesn't exist by email: " + email);
+            throw new NotFoundException("User doesn't exist by email: " + email);
         }
         if (existsByCurrAndPersonId){
-            throw new RuntimeException
+            throw new AlreadyExistsException
                     ("Account for: " + person.getEmail() + " already exists with currency: " + accountRequestDTO.currency());
         }
 
@@ -75,7 +78,7 @@ public class AccountServiceImpl implements AccountService {
     public List<AccountsResponseDTO> accounts(String email){
 
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User doesn't exist by id: " + email));
+                .orElseThrow(() -> new NotFoundException("User doesn't exist by id: " + email));
         List<AccountsResponseDTO> accounts = accountRepository.findAllByPersonId(person.getId()).stream()
                 .map(account -> new AccountsResponseDTO(
                         account.getCurrency(),
@@ -93,16 +96,16 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void delete(Long accountId){
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found for id: " + accountId));
-        Boolean existsCard = cardRepository.existsCardByAccountId(account.getId());
+                .orElseThrow(() -> new NotFoundException("Account not found for id: " + accountId));
+        boolean existsCard = cardRepository.existsCardByAccountId(account.getId());
 
         if (existsCard){
             Card card = cardRepository.findByAccountId(account.getId())
-                    .orElseThrow(() -> new RuntimeException("Card not found ")); // not actually need to throw something, we know it exists by boolean
+                    .orElseThrow(() -> new NotFoundException("Card not found ")); // not actually need to throw something, we know it exists by boolean
             cardRepository.delete(card);
         }
         if (account.getBalance().compareTo(BigDecimal.ZERO) > 0){
-            throw new RuntimeException("Account balance must be 0 to be deleted, balance: " + account.getBalance());
+            throw new BalanceZeroException("Account balance must be 0 to be deleted, balance: " + account.getBalance());
         }
 
         accountRepository.delete(account);
@@ -119,7 +122,7 @@ public class AccountServiceImpl implements AccountService {
         CURRENCY_PREFIX.put("Dollars", "US");
 
         if (!CURRENCY_PREFIX.values().contains(currency)){
-            throw new RuntimeException("Currency doesn't exists: " +
+            throw new NotFoundException("Currency doesn't exists: " +
                 currency + "\n" +
                 "Please select one of existing Currency : " +
                 CURRENCY_PREFIX.values());
@@ -127,7 +130,7 @@ public class AccountServiceImpl implements AccountService {
 
         Random random = new Random();
         String iban = "";
-        Boolean checkIban = true;
+        boolean checkIban = true;
 
         while (checkIban){
             iban = currency + random.nextInt(0, 99) +
@@ -137,7 +140,7 @@ public class AccountServiceImpl implements AccountService {
                     random.nextInt(1000, 9999)+
                     random.nextInt(1000, 9999);
 
-            Boolean existsIban = accountRepository.existsByIban(iban);
+            boolean existsIban = accountRepository.existsByIban(iban);
 
             if (!existsIban){
                 checkIban = false;
