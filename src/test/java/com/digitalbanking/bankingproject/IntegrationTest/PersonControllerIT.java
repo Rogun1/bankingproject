@@ -137,7 +137,7 @@ public class PersonControllerIT {
     // --------------------------------------------
 
     @Test
-    void register_ShouldReturn400_WhenUserAlreadyExistsByCNP() throws Exception{
+    void register_ShouldReturn409_WhenUserAlreadyExistsByCNP() throws Exception{
         personRepository.save(person);
 
         String body = """
@@ -145,7 +145,7 @@ public class PersonControllerIT {
                     "firstName": "%s",
                     "lastName": "%s",
                     "email": "%s",
-                    "CNP": 123456789L,
+                    "CNP": 123456789,
                     "pwd": "%s"
                 }
                 """.formatted(
@@ -157,7 +157,7 @@ public class PersonControllerIT {
         mockMvc.perform(post("/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isConflict());
     }
 
     // --------------------------------------------
@@ -165,7 +165,7 @@ public class PersonControllerIT {
     // --------------------------------------------
 
     @Test
-    void register_ShouldReturn400_WhenEmailAlreadyExists() throws Exception{
+    void register_ShouldReturn409_WhenEmailAlreadyExists() throws Exception{
         personRepository.save(person);
 
         String body = """
@@ -173,7 +173,7 @@ public class PersonControllerIT {
                     "firstName": "%s",
                     "lastName": "%s",
                     "email": "raul@gmail.com",
-                    "CNP": 1234L,
+                    "CNP": 1234,
                     "pwd": "%s"
                 }
                 """.formatted(
@@ -184,7 +184,7 @@ public class PersonControllerIT {
         mockMvc.perform(post("/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isConflict());
     }
 
     // --------------------------------------------

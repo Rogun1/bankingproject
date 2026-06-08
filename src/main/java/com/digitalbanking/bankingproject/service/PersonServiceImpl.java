@@ -7,7 +7,7 @@ import com.digitalbanking.bankingproject.dto.PersonResponseDTO;
 import com.digitalbanking.bankingproject.dto.PersonRoleSetDTO;
 import com.digitalbanking.bankingproject.exceptions.InvalidAccountUsageException;
 import com.digitalbanking.bankingproject.exceptions.NotFoundException;
-import com.digitalbanking.bankingproject.exceptions.PersonAlreadyExistsException;
+import com.digitalbanking.bankingproject.exceptions.AlreadyExistsException;
 import com.digitalbanking.bankingproject.exceptions.PersonAlreadyHasRoleException;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Authority;
@@ -63,10 +63,10 @@ public class PersonServiceImpl implements PersonService {
         Boolean emailIsUsed = personRepository.existsByEmail(personRequestDTO.email());
 
         if (userExists){
-            throw new RuntimeException("User already exists");
+            throw new AlreadyExistsException("User already exists");
         }
         if (emailIsUsed){
-            throw new RuntimeException("Email already used");
+            throw new AlreadyExistsException("Email already used");
         }
 
         String hashPwd = passwordEncoder.encode(personRequestDTO.pwd());
@@ -126,10 +126,10 @@ public class PersonServiceImpl implements PersonService {
         }
 
         if (userExists){
-            throw new PersonAlreadyExistsException("User already exists");
+            throw new AlreadyExistsException("User already exists");
         }
         if (emailExists){
-            throw new PersonAlreadyExistsException("Email already used");
+            throw new AlreadyExistsException("Email already used");
         }
 
         person.setFirstName(personRequestDTO.firstName());
