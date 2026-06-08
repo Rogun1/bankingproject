@@ -170,7 +170,7 @@ public class TransactionServiceImpl implements TransactionService {
                         transactionInRangeRequestDTO.dateFrom(),
                         transactionInRangeRequestDTO.dateTo())
                 .stream()
-                .map(transaction -> toDTO(transaction))
+                .map(this::toDTO)
                 .toList();
 
         return transactions;

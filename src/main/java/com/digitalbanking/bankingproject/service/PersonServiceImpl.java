@@ -59,8 +59,8 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public PersonResponseDTO register(PersonRequestDTO personRequestDTO) {
 
-        Boolean userExists = personRepository.existsByCNP(personRequestDTO.CNP());
-        Boolean emailIsUsed = personRepository.existsByEmail(personRequestDTO.email());
+        boolean userExists = personRepository.existsByCNP(personRequestDTO.CNP());
+        boolean emailIsUsed = personRepository.existsByEmail(personRequestDTO.email());
 
         if (userExists){
             throw new AlreadyExistsException("User already exists");
@@ -118,14 +118,12 @@ public class PersonServiceImpl implements PersonService {
                 .orElseThrow(() -> new NotFoundException("Account doesn't exist for this email"));
         String hashPwd = passwordEncoder.encode(personRequestDTO.pwd());
 
-        Boolean userExists = personRepository.existsByCNP(personRequestDTO.CNP());
-        Boolean emailExists = personRepository.existsByEmail(personRequestDTO.email());
+        boolean cnpExists = personRepository.existsByCNP(personRequestDTO.CNP())
+                && !person.getCNP().equals(personRequestDTO.CNP());
+        boolean emailExists = personRepository.existsByEmail(personRequestDTO.email())
+                && !person.getEmail().equals(personRequestDTO.email());
 
-        if (emailExists.equals(email)){
-            emailExists = false;
-        }
-
-        if (userExists){
+        if (cnpExists){
             throw new AlreadyExistsException("User already exists");
         }
         if (emailExists){
@@ -166,7 +164,7 @@ public class PersonServiceImpl implements PersonService {
 
         String roleName = "ROLE_" + roleDTO.role();
 
-        Boolean existsRole = person.getAuthorities()
+        boolean existsRole = person.getAuthorities()
                 .stream()
                 .anyMatch(authority -> authority.getName().equals(roleName));
 
