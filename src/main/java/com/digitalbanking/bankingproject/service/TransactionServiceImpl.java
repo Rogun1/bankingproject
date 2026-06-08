@@ -6,10 +6,7 @@ import com.digitalbanking.bankingproject.constants.TransactionStatus;
 import com.digitalbanking.bankingproject.dto.TransactionInRangeRequestDTO;
 import com.digitalbanking.bankingproject.dto.TransactionRequestDTO;
 import com.digitalbanking.bankingproject.dto.TransactionResponseDTO;
-import com.digitalbanking.bankingproject.exceptions.AccountDisabledOrExpiredException;
-import com.digitalbanking.bankingproject.exceptions.InsufficientFundsException;
-import com.digitalbanking.bankingproject.exceptions.InvalidAccountUsage;
-import com.digitalbanking.bankingproject.exceptions.SameAccountTransferException;
+import com.digitalbanking.bankingproject.exceptions.*;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Person;
 import com.digitalbanking.bankingproject.model.Transaction;
@@ -68,10 +65,10 @@ public class TransactionServiceImpl implements TransactionService {
         Long secondId = fromId < toId ? toId : fromId;
 
         Account first = accountRepository.findByIdForTransaction(firstId).orElseThrow(
-                () -> new RuntimeException("First account not found for id: " +  firstId)
+                () -> new NotFoundException("First account not found for id: " +  firstId)
         );
         Account second = accountRepository.findByIdForTransaction(secondId).orElseThrow(
-                () -> new RuntimeException("Second account not found for id: " +  secondId)
+                () -> new NotFoundException("Second account not found for id: " +  secondId)
         );
 
         Account accountFrom = (first.getId().equals(fromId)) ? first : second;
@@ -80,10 +77,10 @@ public class TransactionServiceImpl implements TransactionService {
         // ----------------------
 
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User doesn't exist for email: " + email));
+                .orElseThrow(() -> new NotFoundException("User doesn't exist for email: " + email));
 
         if (!accountFrom.getPerson().getId().equals(person.getId())){
-            throw new InvalidAccountUsage("Invalid account " + fromId + ", choose your accounts");
+            throw new InvalidAccountUsageException("Invalid account " + fromId + ", choose your accounts");
         }
 
         if (accountFrom.getStatus() == AccountStatus.DISABLED
@@ -111,7 +108,7 @@ public class TransactionServiceImpl implements TransactionService {
         List<Transaction> transactionsToday = transactionRepository.findAllByFromAccountIdAndCreatedAtDate(accountFrom.getId(),dateNow);
 
         TransactionLimit transactionLimit = transactionLimitRepository.findByPersonId(person.getId())
-                .orElseThrow(() -> new RuntimeException("User not found for id: " + person.getId()));
+                .orElseThrow(() -> new NotFoundException("User not found for id: " + person.getId()));
 
         BigDecimal totalAmountTransactionsToday = BigDecimal.ZERO;
 
@@ -165,9 +162,9 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<TransactionResponseDTO> transactionsInRangeForUser(String email,TransactionInRangeRequestDTO transactionInRangeRequestDTO){
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User doesnt' exist for email: " + email));
+                .orElseThrow(() -> new NotFoundException("User doesnt' exist for email: " + email));
         Account account = accountRepository.findByPersonId(person.getId())
-                .orElseThrow(() -> new RuntimeException("No account found for account: " + person.getId()));
+                .orElseThrow(() -> new NotFoundException("No account found for account: " + person.getId()));
 
         List<TransactionResponseDTO> transactions =
                 transactionRepository.findAllByFromAccountIdAndCreatedAtDateBetween(
@@ -181,23 +178,23 @@ public class TransactionServiceImpl implements TransactionService {
         return transactions;
     }
 
-    private double exchange(String from, String to){
-        Map<String, Map<String,Double>> rates = new HashMap<>();
-
-        rates.put("RO", new HashMap<>());
-        rates.get("RO").put("EU", 0.19);
-        rates.get("RO").put("GB", 0.16);
-        rates.get("RO").put("US", 0.22);
-
-        rates.put("EU", new HashMap<>());
-        rates.get("EU").put("GB", 0.87);
-        rates.get("EU").put("US", 1.17);
-
-        rates.put("GB", new HashMap<>());
-        rates.get("GB").put("US", 1.35);
-
-        double getRates = rates.get(from).get(to);
-
-        return getRates;
-    }
+//    private double exchange(String from, String to){
+//        Map<String, Map<String,Double>> rates = new HashMap<>();
+//
+//        rates.put("RO", new HashMap<>());
+//        rates.get("RO").put("EU", 0.19);
+//        rates.get("RO").put("GB", 0.16);
+//        rates.get("RO").put("US", 0.22);
+//
+//        rates.put("EU", new HashMap<>());
+//        rates.get("EU").put("GB", 0.87);
+//        rates.get("EU").put("US", 1.17);
+//
+//        rates.put("GB", new HashMap<>());
+//        rates.get("GB").put("US", 1.35);
+//
+//        double getRates = rates.get(from).get(to);
+//
+//        return getRates;
+//    }
 }
