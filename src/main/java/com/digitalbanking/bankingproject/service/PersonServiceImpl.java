@@ -5,10 +5,7 @@ import com.digitalbanking.bankingproject.constants.PersonRole;
 import com.digitalbanking.bankingproject.dto.PersonRequestDTO;
 import com.digitalbanking.bankingproject.dto.PersonResponseDTO;
 import com.digitalbanking.bankingproject.dto.PersonRoleSetDTO;
-import com.digitalbanking.bankingproject.exceptions.InvalidAccountUsageException;
-import com.digitalbanking.bankingproject.exceptions.NotFoundException;
-import com.digitalbanking.bankingproject.exceptions.AlreadyExistsException;
-import com.digitalbanking.bankingproject.exceptions.PersonAlreadyHasRoleException;
+import com.digitalbanking.bankingproject.exceptions.*;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Authority;
 import com.digitalbanking.bankingproject.model.Person;
@@ -159,7 +156,7 @@ public class PersonServiceImpl implements PersonService {
         try {
             role = PersonRole.valueOf(roleDTO.role().toUpperCase());
         }catch (Exception e){
-            throw new RuntimeException("Invalid role: " + roleDTO.role());
+            throw new InvalidRoleException("Invalid role: " + roleDTO.role());
         }
 
         String roleName = "ROLE_" + roleDTO.role();
@@ -169,7 +166,7 @@ public class PersonServiceImpl implements PersonService {
                 .anyMatch(authority -> authority.getName().equals(roleName));
 
         if (existsRole){
-            throw new PersonAlreadyHasRoleException("User already has role: " + roleName);
+            throw new InvalidRoleException("User already has role: " + roleName);
         }
 
         Authority authority = new Authority(
@@ -207,4 +204,5 @@ public class PersonServiceImpl implements PersonService {
         transactionLimitRepository.delete(transactionLimit);
         personRepository.delete(person);
     }
+
 }

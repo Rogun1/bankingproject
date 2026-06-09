@@ -101,7 +101,7 @@ public class AccountServiceImpl implements AccountService {
 
         if (existsCard){
             Card card = cardRepository.findByAccountId(account.getId())
-                    .orElseThrow(() -> new NotFoundException("Card not found ")); // not actually need to throw something, we know it exists by boolean
+                    .orElseThrow(() -> new NotFoundException("Card not found "));
             cardRepository.delete(card);
         }
         if (account.getBalance().compareTo(BigDecimal.ZERO) > 0){
