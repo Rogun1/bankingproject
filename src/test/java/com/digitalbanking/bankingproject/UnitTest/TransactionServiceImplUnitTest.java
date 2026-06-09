@@ -551,7 +551,7 @@ public class TransactionServiceImplUnitTest {
         BigDecimal expectedToBalance = BigDecimal.valueOf(20);
         assertEquals(0, accountTo.getBalance().compareTo(expectedToBalance)); // 0 means equals
 
-        // accountFrom should have less than the original 30 (deducted amount + fee)
+        // accountFrom should have less than the original 30 (deducted amount + fee)1
         assertTrue(accountFrom.getBalance().compareTo(BigDecimal.valueOf(30)) < 0);
 
         verify(accountRepository, times(2)).save(any(Account.class));

@@ -5,6 +5,7 @@ import com.digitalbanking.bankingproject.constants.PersonRole;
 import com.digitalbanking.bankingproject.dto.PersonRequestDTO;
 import com.digitalbanking.bankingproject.dto.PersonResponseDTO;
 import com.digitalbanking.bankingproject.dto.PersonRoleSetDTO;
+import com.digitalbanking.bankingproject.exceptions.InvalidRoleException;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Authority;
 import com.digitalbanking.bankingproject.model.Person;
@@ -361,7 +362,7 @@ public class PersonServiceImplUnitTest {
         when(authorityRepository.findAllByPersonId(person.getId()))
                 .thenReturn(person.getAuthorities());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        InvalidRoleException ex = assertThrows(InvalidRoleException.class,
                 () -> personService.assignRole(roleDTO, "raul@gmail.com"));
 
         assertTrue(ex.getMessage().contains("already has role"));

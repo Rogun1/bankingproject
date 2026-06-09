@@ -22,9 +22,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -117,16 +115,16 @@ public class TransactionServiceImpl implements TransactionService {
                 totalAmountTransactionsToday = totalAmountTransactionsToday.add(t.getAmount());
             }
             if (totalAmountTransactionsToday.compareTo(BigDecimal.valueOf(transactionLimit.getDailyLimit())) > 0){
-                throw new RuntimeException("Daily limit amount of " + transactionLimit.getDailyLimit() + " for transactions reached: " + totalAmountTransactionsToday);
+                throw new LimitException("Daily limit amount of " + transactionLimit.getDailyLimit() + " for transactions reached: " + totalAmountTransactionsToday);
             }
         }
 
         if (transactionLimit.getPerTransactionLimit() < amountToTransfer.doubleValue() ){
-            throw new RuntimeException("Per transaction limit is set to maximum: " + transactionLimit.getPerTransactionLimit());
+            throw new LimitException("Per transaction limit is set to maximum: " + transactionLimit.getPerTransactionLimit());
         }
 
         if (!(transactionsToday.size() < transactionLimit.getMaxTransactionsLimitDaily())){
-            throw new RuntimeException("Max transaction limit today reached");
+            throw new LimitException("Max transaction limit today reached");
         }
 
         if (currentAccountBalance.compareTo(amountToTransfer.add(bankTransferFee)) < 0){
@@ -172,7 +170,7 @@ public class TransactionServiceImpl implements TransactionService {
                         transactionInRangeRequestDTO.dateFrom(),
                         transactionInRangeRequestDTO.dateTo())
                 .stream()
-                .map(transaction -> toDTO(transaction))
+                .map(this::toDTO)
                 .toList();
 
         return transactions;
