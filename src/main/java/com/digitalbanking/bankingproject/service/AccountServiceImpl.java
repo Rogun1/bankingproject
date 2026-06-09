@@ -99,7 +99,10 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new NotFoundException("Account not found for id: " + accountId));
         boolean existsCard = cardRepository.existsCardByAccountId(account.getId());
 
+        //Check this
         if (existsCard){
+            // It will never throw, because we know it exists from boolean
+            // But it needs throw from repository
             Card card = cardRepository.findByAccountId(account.getId())
                     .orElseThrow(() -> new NotFoundException("Card not found "));
             cardRepository.delete(card);
