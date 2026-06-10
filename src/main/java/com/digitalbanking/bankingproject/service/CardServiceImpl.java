@@ -5,6 +5,9 @@ import com.digitalbanking.bankingproject.constants.CardStatus;
 import com.digitalbanking.bankingproject.dto.AccountRequestDTO;
 import com.digitalbanking.bankingproject.dto.CardResponseDTO;
 import com.digitalbanking.bankingproject.dto.CardStatusBlockRequestDTO;
+import com.digitalbanking.bankingproject.exceptions.AlreadyExistsException;
+import com.digitalbanking.bankingproject.exceptions.InvalidRequestException;
+import com.digitalbanking.bankingproject.exceptions.NotFoundException;
 import com.digitalbanking.bankingproject.model.Account;
 import com.digitalbanking.bankingproject.model.Card;
 import com.digitalbanking.bankingproject.model.Person;
@@ -47,7 +50,7 @@ public class CardServiceImpl implements CardService {
     public CardResponseDTO getCard(String email, AccountRequestDTO accountRequestDTO) throws Exception {
 
         Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User doesn't exists for email: " + email));
+                .orElseThrow(() -> new NotFoundException("User doesn't exists for email: " + email));
 
         List<Account> accounts = accountRepository.findAllByPersonId(person.getId());
         Account account = null;
@@ -60,14 +63,14 @@ public class CardServiceImpl implements CardService {
             if (acc.getCurrency().equals(accountRequestDTO.currency()) ) {
                 boolean existsCard = cardRepository.existsCardByAccountId(acc.getId());
                 if (existsCard) {
-                    throw new RuntimeException("You already have an card opened for: " + acc.getCurrency());
+                    throw new AlreadyExistsException("You already have an card opened for: " + acc.getCurrency());
                 }
                 account = acc;
             }
 
         }
         if (account == null){
-            throw new RuntimeException("No account found for currency: " + accountRequestDTO.currency());
+            throw new NotFoundException("No account found for currency: " + accountRequestDTO.currency());
         }
 
         String cardNumber = cardNumberGenerator();
@@ -95,16 +98,16 @@ public class CardServiceImpl implements CardService {
     @Override
     public CardResponseDTO blockCard(String email, Long cardId, CardStatusBlockRequestDTO cardStatus){
         Card card = cardRepository.findById(cardId)
-                .orElseThrow(() -> new RuntimeException("Card not found for id: " + cardId));
+                .orElseThrow(() -> new NotFoundException("Card not found for id: " + cardId));
         String cardStatusAsString = CardStatus.BLOCKED.toString();
 
-        if (card.getStatus().toString().equals(cardStatusAsString)){
-            throw new RuntimeException("Card is already blocked");
+        if (card.getStatus().equals(CardStatus.BLOCKED)){
+            throw new InvalidRequestException("Card is already blocked");
         }
         if (cardStatus.cardStatus().equals(cardStatusAsString)){
             card.setStatus(CardStatus.BLOCKED);
         }else{
-            throw new RuntimeException("Invalid status to Block Card: " + cardStatus.cardStatus());
+            throw new InvalidRequestException("Invalid status to Block Card: " + cardStatus.cardStatus());
         }
 
         return toDTO(cardRepository.save(card));
