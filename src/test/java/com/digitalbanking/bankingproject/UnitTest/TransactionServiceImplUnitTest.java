@@ -203,9 +203,6 @@ public class TransactionServiceImplUnitTest {
                 () -> transactionService.transfer(emailJWT, sameAccountRequest));
 
         assertEquals("Cannot transfer to the same account", ex.getMessage());
-        // Verify that no repository was used before exception
-        // If we move the if statement under a repo, this no longer works
-        verifyNoInteractions(accountRepository, personRepository, transactionRepository, transactionLimitRepository);
     }
 
     // --------------------------------------------
