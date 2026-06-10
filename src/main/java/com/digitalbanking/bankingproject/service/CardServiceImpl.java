@@ -47,7 +47,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public CardResponseDTO getCard(String email, AccountRequestDTO accountRequestDTO) throws Exception {
+    public CardResponseDTO getCard(String email, AccountRequestDTO accountRequestDTO) {
 
         Person person = personRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User doesn't exists for email: " + email));
@@ -115,7 +115,7 @@ public class CardServiceImpl implements CardService {
 
 
     //Simulating a card generator
-    protected String cardNumberGenerator() throws Exception {
+    protected String cardNumberGenerator() {
         Random random = new Random();
         String cardNumber = "";
         boolean checkCardNumber = true;
@@ -156,7 +156,7 @@ public class CardServiceImpl implements CardService {
 
     //Card number encoding
     //Do a proper encoding/decoding TO DO
-    protected String cardNumberEncryption(String cardNumber) throws Exception {
+    protected String cardNumberEncryption(String cardNumber) {
 
         String cardNumberString = cardNumber.toString();
         StringBuilder cardNmb = new StringBuilder(cardNumberString);

@@ -1,6 +1,8 @@
 package com.digitalbanking.bankingproject.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public record AccountRequestDTO(
-        String currency
+        @NotNull String currency
 ) {
 }

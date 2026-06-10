@@ -4,8 +4,10 @@ import com.digitalbanking.bankingproject.dto.PersonRequestDTO;
 import com.digitalbanking.bankingproject.dto.PersonResponseDTO;
 import com.digitalbanking.bankingproject.dto.PersonRoleSetDTO;
 import com.digitalbanking.bankingproject.service.declarations.PersonService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +19,7 @@ public class PersonController {
     private final PersonService personService;
 
     @PostMapping("/register")
-    public PersonResponseDTO register(@RequestBody PersonRequestDTO personRequestDTO){
+    public PersonResponseDTO register(@RequestBody @Valid PersonRequestDTO personRequestDTO){
         return personService.register(personRequestDTO);
     }
 
@@ -27,7 +29,7 @@ public class PersonController {
     }
 
     @PutMapping("/update")
-    public PersonResponseDTO update(Authentication authentication, @RequestBody PersonRequestDTO personRequestDTO){
+    public PersonResponseDTO update(Authentication authentication, @RequestBody @Valid PersonRequestDTO personRequestDTO){
         return personService.update(authentication.getName(), personRequestDTO);
     }
 
@@ -37,12 +39,12 @@ public class PersonController {
     }
 
     @PatchMapping("/{email}/roles")
-    public PersonResponseDTO assignRole(@RequestBody PersonRoleSetDTO role, @PathVariable String email){
+    public PersonResponseDTO assignRole(@RequestBody @Valid PersonRoleSetDTO role, @PathVariable @Email String email){
         return personService.assignRole(role, email);
     }
 
     @DeleteMapping("/{personId}/delete")
-    public void delete(@PathVariable Long personId){
+    public void delete(@PathVariable @NotNull Long personId){
         personService.delete(personId);
     }
 }
