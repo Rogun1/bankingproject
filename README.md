@@ -52,6 +52,8 @@ cd bankingproject
 ```bash
 mvn spring-boot:run
 ```
+In application.properties, make sure the profile is set to default, not prod !
+Prod profile requires https request
 
 ## API Documentation
 
